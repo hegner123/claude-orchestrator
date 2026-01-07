@@ -4,7 +4,10 @@
       "Bash(git reset:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Add Umbraco documentation and AI component build system\n\nAdded comprehensive documentation for Umbraco project including:\n- Component build system design with AI-powered workflow\n- Data type implementation guides and converters\n- TypeScript type relationships and UDA file formats\n- Seed project analysis, tasks, and style guides\n- Backend extensions and patterns cookbook\n\nAlso includes .gitignore for macOS system files.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(wc:*)",
+      "Bash(pip install:*)",
+      "Bash(python3:*)"
     ]
   }
 }
