@@ -7,6 +7,7 @@ Multi-agent workflow for generating Umbraco components from design images
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -28,6 +29,14 @@ except ImportError:
     print("Make sure models/component_contract.py exists")
     sys.exit(1)
 
+# Import agents
+try:
+    from agents import VisionAgent
+except ImportError:
+    print("❌ Error: Agents not found")
+    print("Make sure agents/vision_agent.py exists")
+    sys.exit(1)
+
 
 class ComponentBuilderOrchestrator:
     """Orchestrates multi-agent workflow for component generation"""
@@ -45,6 +54,9 @@ class ComponentBuilderOrchestrator:
 
         # Initialize Anthropic client
         self.client = Anthropic(api_key=self.api_key)
+
+        # Initialize agents
+        self.vision_agent = VisionAgent(client=self.client)
 
         # Workflow state
         self.workflow_dir = Path("./workflow")
@@ -121,6 +133,71 @@ class ComponentBuilderOrchestrator:
         self.contract = ComponentContract()
         print("✨ New contract created")
 
+    def run_vision_analysis(
+        self,
+        desktop_image: str,
+        mobile_image: Optional[str] = None,
+        context: Optional[str] = None
+    ) -> bool:
+        """
+        Run Phase 1: Vision Analysis.
+
+        Args:
+            desktop_image: Path to desktop design image
+            mobile_image: Path to mobile design image (optional)
+            context: Additional context about component (optional)
+
+        Returns:
+            True if successful, False otherwise
+        """
+        print("\n" + "=" * 60)
+        print("📸 Phase 1: Vision Analysis")
+        print("=" * 60)
+
+        try:
+            # Run vision agent
+            contract = self.vision_agent.analyze_design(
+                desktop_image_path=desktop_image,
+                mobile_image_path=mobile_image,
+                context=context
+            )
+
+            # Update our contract with vision results
+            self.contract.visual_structure = contract.visual_structure
+            self.contract.functionality = contract.functionality
+            self.contract.confidence_scores.extend(contract.confidence_scores)
+            self.contract.update_timestamp()
+
+            # Merge artifacts
+            if 'vision_analysis' in contract.artifacts:
+                self.contract.artifacts['vision_analysis'] = contract.artifacts['vision_analysis']
+
+            # Update overall confidence
+            if self.contract.confidence_scores:
+                avg_score = sum(c.score for c in self.contract.confidence_scores) / len(self.contract.confidence_scores)
+                self.contract.metadata.confidence_score = avg_score
+
+            # Save contract
+            self.save_contract()
+
+            print("\n✅ Vision analysis complete!")
+
+            # Check if operator review needed
+            if self.contract.needs_operator_review():
+                low_conf = self.contract.get_low_confidence_decisions()
+                print(f"\n⚠️  Operator review required for {len(low_conf)} decisions:")
+                for decision in low_conf:
+                    print(f"   • {decision.decision} (confidence: {decision.score:.2f})")
+                    print(f"     Reasoning: {decision.reasoning}")
+
+            return True
+
+        except Exception as e:
+            print(f"\n❌ Vision analysis failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
     def print_status(self):
         """Print orchestrator status"""
         print("\n📋 Orchestrator Status:")
@@ -171,11 +248,13 @@ def main():
         print("\n✨ Ready to build components!")
         print("\n💡 Next steps:")
         print("   1. ✅ Component Contract schema - COMPLETE")
-        print("   2. Implement vision agent (design image analysis)")
+        print("   2. ✅ Vision agent - COMPLETE")
         print("   3. Implement backend agent (UDA generation)")
         print("   4. Implement TypeScript agent (type definitions)")
         print("   5. Implement style agent (CSS/SCSS generation)")
         print("   6. Add validation gates (4 quality checks)")
+        print("\n💡 To analyze a design:")
+        print("   orchestrator.run_vision_analysis('path/to/design.png')")
     else:
         print("\n⚠️  Fix connection issues before proceeding")
         sys.exit(1)
