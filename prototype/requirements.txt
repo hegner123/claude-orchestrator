@@ -1,0 +1,19 @@
+# Component Builder Orchestrator Dependencies
+
+# Anthropic Claude API
+anthropic>=0.39.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# JSON schema validation (for Component Contract)
+pydantic>=2.0.0
+
+# Async support
+aiohttp>=3.9.0
+
+# CLI interface (optional, for future)
+click>=8.1.0
+
+# Image processing (for future vision agent)
+pillow>=10.0.0

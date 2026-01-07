@@ -1,0 +1,22 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+# Workflow artifacts
+workflow/
+generated/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
